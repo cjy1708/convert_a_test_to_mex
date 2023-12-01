@@ -13,7 +13,7 @@
 
 void
 fiberbundle
-::ReadFibers(std::string inputFibersFileName)
+::ReadFibers(const std::string& inputFibersFileName)
 {
     this->m_InputFibersFileName = inputFibersFileName;
     //Read a vtk polydata file and convert to a internal usable structure for the algorithm.
@@ -72,7 +72,7 @@ fiberbundle
 
 void
 fiberbundle
-::WriteFibers(std::string outputFibersFileName, bool writeAscii, bool writeUnCompressed)
+::WriteFibers(const std::string& outputFibersFileName, bool writeAscii, bool writeUnCompressed)
 {
     //Write a vtk polydata.  Have to populate from the Fiber
     // allocate empty polyData
@@ -83,20 +83,18 @@ fiberbundle
     vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
     vtkSmartPointer<vtkCellArray> lines = vtkSmartPointer<vtkCellArray>::New();
 
-    for (FiberVector::iterator it = this->m_FiberBundle.begin();
-        it != this->m_FiberBundle.end(); ++it)
+    for (auto & it : this->m_FiberBundle)
     {
-        num_points += (*it).Points.size();
+        num_points += it.Points.size();
     }
 
-    for (FiberVector::iterator it = this->m_FiberBundle.begin();
-        it != this->m_FiberBundle.end(); ++it)
+    for (auto & it : this->m_FiberBundle)
     {
-        int fiber_size = static_cast<int>((*it).Points.size());
-        vtkIdType* ids = new vtkIdType[fiber_size];
+        int fiber_size = static_cast<int>(it.Points.size());
+        auto* ids = new vtkIdType[fiber_size];
         for (vtkIdType curPoint = 0; curPoint < fiber_size; ++curPoint, ++counter)
         {
-            vec3_t curPt = (*it).Points[curPoint];
+            vec3_t curPt = it.Points[curPoint];
             // add current point
             points->InsertNextPoint(curPt[0], curPt[1], curPt[2]);
             // add id of current point to id array
@@ -114,26 +112,25 @@ fiberbundle
     fiber::FieldMapType AllDecorators;
     fiber::TensorMapType AllTensors;
 
-    for (FiberVector::iterator it = this->m_FiberBundle.begin();
-        it != this->m_FiberBundle.end(); ++it)
+    for (auto & it : this->m_FiberBundle)
     {
-        for (fiber::FieldMapType::const_iterator it2 = it->Fields.begin();
-            it2 != it->Fields.end(); ++it2)
+        for (fiber::FieldMapType::const_iterator it2 = it.Fields.begin();
+            it2 != it.Fields.end(); ++it2)
         {
             const std::string& attName = it2->first;
             const std::vector<float>& array = it2->second;
-            for (std::vector<float>::const_iterator it3 = array.begin(); it3 != array.end(); ++it3)
+            for (float it3 : array)
             {
-                AllDecorators[attName].push_back((*it3));
+                AllDecorators[attName].push_back(it3);
             }
         }
-        for (fiber::TensorMapType::const_iterator it2 = it->Tensors.begin(); it2 != it->Tensors.end(); ++it2)
+        for (fiber::TensorMapType::const_iterator it2 = it.Tensors.begin(); it2 != it.Tensors.end(); ++it2)
         {
             const std::string& attName = it2->first;
             const stdMat_t& tensors = it2->second;
-            for (stdMat_t::const_iterator it3 = tensors.begin(); it3 != tensors.end(); ++it3)
+            for (const auto & tensor : tensors)
             {
-                AllTensors[attName].push_back((*it3));
+                AllTensors[attName].push_back(tensor);
             }
         }
     }
@@ -165,13 +162,13 @@ fiberbundle
         curAtt->Allocate(it->second.size() * 9);
         curAtt->SetName(it->first.c_str());
         float tmp[9];
-        for (stdMat_t::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+        for (const auto & it2 : it->second)
         {
             for (unsigned int i = 0, v = 0; i < 3; ++i)
             {
                 for (unsigned int j = 0; j < 3; ++j, ++v)
                 {
-                    tmp[v] = (*it2)(i, j);
+                    tmp[v] = it2(i, j);
                 }
             }
             curAtt->InsertNextTuple(tmp);
@@ -238,17 +235,14 @@ fiberbundle
 {
     ofstream outfile("TD.txt", ios::trunc);
     
-    for (FiberVector::const_iterator it = this->m_FiberBundle.begin();
-        it != this->m_FiberBundle.end(); ++it)
+    for (const auto & curFiber : this->m_FiberBundle)
     {
-        const fiber& curFiber = *it;
-        for (fiber::FieldMapType::const_iterator curFiberIt = curFiber.Fields.begin();
-            curFiberIt != curFiber.Fields.end(); ++curFiberIt)
+        for (const auto & Field : curFiber.Fields)
         {
-            if (curFiberIt->first == "DDF") {
-                for (unsigned int i = 0; i < curFiberIt->second.size(); ++i)
+            if (Field.first == "DDF") {
+                for (float i : Field.second)
                 {
-                    outfile << curFiberIt->second[i] << "\n";
+                    outfile << i << "\n";
                 }
             }
         }

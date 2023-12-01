@@ -1,8 +1,9 @@
 ﻿#include <computedispersion.h>
 #include <Eigen/Dense>
 
-#include <math.h>
+#include <cmath>
 #include <algorithm>
+#include <utility>
 #include <vector>
 /* This function requires three compulsory input arguments.此函数需要三个强制输入参数。
 
@@ -80,12 +81,12 @@ namespace {
         VectorType eigenValues = eig.eigenvalues();
         MatrixType eigenVectors = eig.eigenvectors();
 
-        MatrixType rval(mat.cols(), mat.cols());
+        MatrixType rVal(mat.cols(), mat.cols());
         for (unsigned i = 0; i < unsigned(mat.cols()); ++i)
         {
-            rval.row(i) = eigenVectors.row((mat.cols() - 1) - i).normalized();
+            rVal.row(i) = eigenVectors.row((mat.cols() - 1) - i).normalized();
         }
-        return rval;
+        return rVal;
     }
 
     /* Go from std::vector<std::vector<vec3_t> to std::vector<MatrixType>
@@ -127,10 +128,10 @@ namespace {
     class Frame {
     public:
         typedef Eigen::Matrix<ukfPrecisionType, 3, 1> FixedVectorType;
-        Frame(const VectorType& xCoords, const VectorType& yCoords, const VectorType& zCoords,
-            const VectorType& constraintVector) : m_Xcoords(xCoords),
-            m_Ycoords(yCoords),
-            m_Zcoords(zCoords),
+        Frame(VectorType xCoords, VectorType yCoords, VectorType  zCoords,
+            const VectorType& constraintVector) : m_Xcoords(std::move(xCoords)),
+            m_Ycoords(std::move(yCoords)),
+            m_Zcoords(std::move(zCoords)),
             m_ConstraintVector(constraintVector)
         {
         }

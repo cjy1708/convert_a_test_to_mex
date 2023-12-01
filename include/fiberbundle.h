@@ -16,9 +16,9 @@ class fiberbundle {
 public:
     typedef std::vector<fiber> FiberVector;
 
-    void ReadFibers(std::string inputFibersFileName);
+    void ReadFibers(const std::string& inputFibersFileName);
 
-    void WriteFibers(std::string outputFibersFileName, bool writeAscii, bool writeUnCompressed);
+    void WriteFibers(const std::string& outputFibersFileName, bool writeAscii, bool writeUnCompressed);
 
     FiberVector& GetFibers() { return m_FiberBundle; }
 
