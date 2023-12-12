@@ -11,8 +11,10 @@
 #include <fiberbundle.h>
 #include <vtkPolyDataIO.h>
 
+typedef fiberbundle fiberbundle1;
+
 void
-fiberbundle
+fiberbundle1
 ::ReadFibers(const std::string& inputFibersFileName)
 {
     this->m_InputFibersFileName = inputFibersFileName;
@@ -71,7 +73,7 @@ fiberbundle
 }
 
 void
-fiberbundle
+fiberbundle1
 ::WriteFibers(const std::string& outputFibersFileName, bool writeAscii, bool writeUnCompressed)
 {
     //Write a vtk polydata.  Have to populate from the Fiber
@@ -192,7 +194,7 @@ fiberbundle
 }
 
 void
-fiberbundle
+fiberbundle1
 ::Print()
 {
     std::cerr << this->m_InputFibersFileName << ":" << std::endl;
@@ -229,9 +231,9 @@ fiberbundle
 }
 
 using namespace std;
-void
-fiberbundle
-::PrintTXT()
+vector<float>
+fiberbundle1
+::getTd()
 {
     ofstream outfile("TD.txt", ios::trunc);
     
@@ -250,9 +252,9 @@ fiberbundle
     outfile.close();
 }
 
-void
-fiberbundle
-::Print_fiber_TD()
+vector<vector<float>>
+fiberbundle1
+::getFiberTd()
 {
     ofstream outfile("fiber_TD.txt", ios::trunc);
     //outfile << this->m_InputFibersFileName << ":" << std::endl;

@@ -40,8 +40,8 @@ int main() {
     cin >> output_filename;
     myBundle.WriteFibers(output_filename, false, true);  //writeAscii,writeUnCompressed: true or false
     //myBundle.Print();
-    myBundle.PrintTXT();     // 输出 TD 值 ，保存为 TXT 文档
-    myBundle.Print_fiber_TD();   // 输出每根纤维对应的 TD 值，保存为 TXT 文档
+    myBundle.getTd();     // 输出 TD 值 ，保存为 TXT 文档
+    myBundle.getFiberTd();   // 输出每根纤维对应的 TD 值，保存为 TXT 文档
 
     return 0;
 }
