@@ -72,6 +72,12 @@ fiberbundle1
     }
 }
 
+/**
+ *
+ * @param outputFibersFileName
+ * @param writeAscii
+ * @param writeUnCompressed
+ */
 void
 fiberbundle1
 ::WriteFibers(const std::string& outputFibersFileName, bool writeAscii, bool writeUnCompressed)

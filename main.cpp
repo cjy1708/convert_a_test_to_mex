@@ -2,6 +2,9 @@
 #include <iostream>
 #include <chrono>
 
+#include <mex.hpp>
+#include <mexAdapter.hpp>
+
 // 自定义头文件
 #include <fiberbundle.h>
 #include <computedispersion.h>
@@ -9,6 +12,50 @@
 using namespace std;
 
 auto measureTimeMillis(const function<void()>& func) -> decltype(std::chrono::milliseconds().count());
+
+class MexFunction : public matlab::mex::Function {
+    matlab::data::ArrayFactory factory;
+    std::shared_ptr<matlab::engine::MATLABEngine> matlabPtr = getEngine();
+public:
+    /**
+     * @example
+     * @param outputs
+     * @param inputs input_filename, output_filename, scale, numberOfSamplingDirections, tractSubSampling, fiberPointSubSampling
+     */
+    void operator()(matlab::mex::ArgumentList outputs, matlab::mex::ArgumentList inputs) override {
+        using namespace matlab::data;
+        checkInput(inputs);
+
+        CharArray input_filename = inputs[0];
+        auto inputFilename{ input_filename.toAscii() };
+        CharArray output_filename = inputs[1];
+        auto outputFilename{ output_filename.toAscii() };
+        uint scale = inputs[2][0];
+        uint numberOfSamplingDirections = inputs[3][0];
+        uint tractSubSampling = inputs[4][0];
+        uint fiberPointSubSampling = inputs[5][0];
+
+        fiberbundle myBundle;
+        myBundle.ReadFibers(inputFilename);
+        computedispersion(myBundle, scale, numberOfSamplingDirections, outputFilename, tractSubSampling, fiberPointSubSampling);
+        myBundle.WriteFibers(outputFilename, false, true);
+
+        if (outputs.size() != 2) {
+            // 在matlab上打印错误日志
+            matlab::data::CharArray error_message = factory.createCharArray(
+                "Error: Two output arguments required.");
+            matlabPtr->feval(u"error", 0,
+                std::vector<Array>({ error_message }));
+        }
+
+    }
+
+    void
+    checkInput(matlab::mex::ArgumentList inputs)
+    {
+
+    }
+};
 
 // 主函数
 int main() {
