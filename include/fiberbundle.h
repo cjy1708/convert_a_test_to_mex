@@ -4,10 +4,10 @@
 //#include "vtkSmartPointer.h"
 //#include "vtkPolyData.h"
 //#include "vtkDataArray.h"
-#include<vector>
-#include<map>
+#include <vector>
+#include <map>
 
-#include"fiber.h"
+#include "fiber.h"
 #include <vtkType.h>
 #include <vtkDataArray.h>
 #include <vtkPolyData.h>
@@ -27,7 +27,7 @@ public:
     [[nodiscard]]
     std::vector<float> getTd();
     [[nodiscard]]
-    std::vector<std::vector<float>> getFiberTd();
+    std::map<int, std::vector<float>> getFiberTd();
 
 private:
     template<typename TArray>

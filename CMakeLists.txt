@@ -6,10 +6,13 @@ set(CMAKE_CXX_STANDARD 11)
 find_package(VTK REQUIRED)
 find_package(ITK REQUIRED)
 
+# 打印找到的VTK和ITK的位置
+message(STATUS "VTK_DIR: ${VTK_DIR}")
+message(STATUS "ITK_DIR: ${ITK_DIR}")
+
 # matlab include dir
 find_path(MATLAB_INCLUDE_DIR NAMES "mex.h" PATHS "/home/mi/Software/MATLAB/R2022b/extern/include")
 
-include(${VTK_USE_FILE} ${ITK_USE_FILE})
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include /usr/local/include/eigen3 ${MATLAB_INCLUDE_DIR})
 file(GLOB CPP_SOURCE src/*.cpp)
 

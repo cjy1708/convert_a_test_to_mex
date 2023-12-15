@@ -16,6 +16,9 @@ auto measureTimeMillis(const function<void()>& func) -> decltype(std::chrono::mi
 class MexFunction : public matlab::mex::Function {
     matlab::data::ArrayFactory factory;
     std::shared_ptr<matlab::engine::MATLABEngine> matlabPtr = getEngine();
+
+    vector<float> td;
+    map<int, vector<float>> fiberTd;
 public:
     /**
      * @example
@@ -24,6 +27,12 @@ public:
      */
     void operator()(matlab::mex::ArgumentList outputs, matlab::mex::ArgumentList inputs) override {
         using namespace matlab::data;
+        if (inputs.size() == 0 && outputs.size() == 2) {
+            TypedArray<float> output_1{ factory.createArray<float>({td.size(), 1}, td.begin().base(), td.end().base()) };
+            outputs[0] = std::move(output_1);
+            outputs[1] = getMexArray(std::move(this->fiberTd));
+            return ;
+        }
         checkInput(inputs);
 
         CharArray input_filename = inputs[0];
@@ -41,57 +50,54 @@ public:
         myBundle.WriteFibers(outputFilename, false, true);
 
         if (outputs.size() != 2) {
+            // 保存输出参数
+            this->td = myBundle.getTd();
+            this->fiberTd = myBundle.getFiberTd();
             // 在matlab上打印错误日志
             matlab::data::CharArray error_message = factory.createCharArray(
-                "Error: Two output arguments required.");
+                "Error: the number of output should be less to 2. \n"
+                "rerun this function with no input and two output. \n");
             matlabPtr->feval(u"error", 0,
                 std::vector<Array>({ error_message }));
         }
-
+        // 输出参数第一个保存一个列向量
+        auto output_1 = myBundle.getTd();
+        matlab::data::TypedArray<double> output_1_array = factory.createArray<float>(
+                {output_1.size(), 1}, output_1.begin().base(), output_1.end().base());
+        outputs[0] = std::move(output_1_array);
+        outputs[1] = getMexArray(myBundle.getFiberTd());
     }
 
     void
-    checkInput(matlab::mex::ArgumentList inputs)
+    checkInput(matlab::mex::ArgumentList &inputs)
     {
+        using namespace matlab::data;
+        if (inputs.size() != 6) {
+            // 在matlab上打印错误日志
+            matlab::data::CharArray error_message = factory.createCharArray(
+                "Use this function like this: \n"
+                "td, fiberTd = this_func(input_filename, output_filename, scale, numberOfSamplingDirections, tractSubSampling, fiberPointSubSampling) \n");
+            matlabPtr->feval(u"error", 0,
+                std::vector<Array>({ error_message }));
+        }
+    }
 
+    matlab::data::Array getMexArray (const std::map<int, std::vector<float>>&& m) { // 定义一个将map转为matlab::data::Array的函数
+        matlab::data::StructArray mx = factory.createStructArray ( { 1,1 }, { "keys", "values" }); // 创建一个1行1列的matlab::data::StructArray对象，包含两个字段：keys和values
+        std::vector<int> keys; // 定义一个存储键的vector
+        std::vector<matlab::data::Array> values; // 定义一个存储值的vector
+        for (auto& p : m) { // 遍历map中的每一对键值
+            keys.emplace_back(p.first); // 将键添加到vector中
+            values.push_back (factory.createArray( { 1,p.second.size () }, p.second.begin (), p.second.end ())); // 将值的vector转为matlab::data::Array对象，并添加到vector中
+        }
+        mx [0] ["keys"] = factory.createArray ( { 1,m.size () }, keys.begin (), keys.end ()); // 将键的vector转为matlab::data::Array对象，并赋值给mx [0] ["keys"]
+        mx [0] ["values"] = factory.createCellArray ( { 1,m.size () });
+        for (size_t i{}; i < values.size(); ++i) {
+            mx[0]["values"][i] = std::move(values[i]);
+        }// 将值的vector转为matlab::data::CellArray对象，并赋值给mx [0] ["values"]
+        return mx; // 返回一个matlab::data::Array对象
     }
 };
-
-// 主函数
-int main() {
-    string input_filename;
-    cout << "输入文件名：" << endl;
-    cin >> input_filename;
-    //filename = "1T_fiber.vtk";
-    // 读取 纤维束 数据  .vtk
-    fiberbundle myBundle;
-    auto readTime = measureTimeMillis([&]() { myBundle.ReadFibers(input_filename); });
-    std::cout << "读取文件耗时: " << readTime << " ms" << std::endl;
-//    myBundle.ReadFibers(input_filename);  // 括号里是vtk文件名
-    //filename = "fiber_1T_output.vtk";
-    // 数据处理
-    readTime = measureTimeMillis([&]() { computedispersion(myBundle, 3, 3, "", 1, 1); });
-    std::cout << "计算耗时: " << readTime << " ms" << std::endl;
-
-//    computedispersion(myBundle, 3, 3, "", 1, 1);
-    /*int computedispersion(fiberbundle& bundle,
-    double scale,  半径
-    unsigned int numberOfSamplingDirections, 采样方向数
-        const std::string& outputFilename,
-    unsigned int tractSubSampling = 1,  纤维束子采样
-    unsigned int fiberPointSubSampling = 1);   点子采样  */
-
-    // 输出处理结果  .vtk  文件
-    string output_filename;
-    cout << "输出文件名 vtk：" << endl;
-    cin >> output_filename;
-    myBundle.WriteFibers(output_filename, false, true);  //writeAscii,writeUnCompressed: true or false
-    //myBundle.Print();
-    myBundle.getTd();     // 输出 TD 值 ，保存为 TXT 文档
-    myBundle.getFiberTd();   // 输出每根纤维对应的 TD 值，保存为 TXT 文档
-
-    return 0;
-}
 
 auto measureTimeMillis(const function<void()>& func) -> decltype(std::chrono::milliseconds().count())
 {

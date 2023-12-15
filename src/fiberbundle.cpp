@@ -241,7 +241,7 @@ vector<float>
 fiberbundle1
 ::getTd()
 {
-    ofstream outfile("TD.txt", ios::trunc);
+    vector<float> ret;
     
     for (const auto & curFiber : this->m_FiberBundle)
     {
@@ -250,36 +250,34 @@ fiberbundle1
             if (Field.first == "DDF") {
                 for (float i : Field.second)
                 {
-                    outfile << i << "\n";
+                    ret.emplace_back(i);
                 }
             }
         }
     }
-    outfile.close();
+    return ret;
 }
 
-vector<vector<float>>
+map<int, vector<float>>
 fiberbundle1
 ::getFiberTd()
 {
-    ofstream outfile("fiber_TD.txt", ios::trunc);
-    //outfile << this->m_InputFibersFileName << ":" << std::endl;
-    for (FiberVector::const_iterator it = this->m_FiberBundle.begin();
-        it != this->m_FiberBundle.end(); ++it)
+    map<int, vector<float>> ret;
+    int i = 0;
+    for (const auto & curFiber : this->m_FiberBundle)
     {
-        const fiber& curFiber = *it;
-        outfile << "Fiber " << it - this->m_FiberBundle.begin() << ":" << std::endl;
-        for (fiber::FieldMapType::const_iterator curFiberIt = curFiber.Fields.begin();
-            curFiberIt != curFiber.Fields.end(); ++curFiberIt)
+        vector<float> tmp;
+        for (const auto & Field : curFiber.Fields)
         {
-            if (curFiberIt->first == "DDF") {
-                for (unsigned int i = 0; i < curFiberIt->second.size(); ++i)
+            if (Field.first == "DDF") {
+                for (float j : Field.second)
                 {
-                    outfile << curFiberIt->second[i] << "  ";
+                    tmp.emplace_back(j);
                 }
             }
         }
-        outfile << "\n";
+        ret[i++].swap(tmp);
     }
-    outfile.close();
+
+    return ret;
 }
