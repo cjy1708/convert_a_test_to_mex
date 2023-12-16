@@ -11,10 +11,9 @@
 #include <fiberbundle.h>
 #include <vtkPolyDataIO.h>
 
-typedef fiberbundle fiberbundle1;
 
 void
-fiberbundle1
+fiberbundle
 ::ReadFibers(const std::string& inputFibersFileName)
 {
     this->m_InputFibersFileName = inputFibersFileName;
@@ -73,7 +72,7 @@ fiberbundle1
 }
 
 void
-fiberbundle1
+fiberbundle
 ::WriteFibers(const std::string& outputFibersFileName, bool writeAscii, bool writeUnCompressed)
 {
     //Write a vtk polydata.  Have to populate from the Fiber
@@ -194,7 +193,7 @@ fiberbundle1
 }
 
 void
-fiberbundle1
+fiberbundle
 ::Print()
 {
     std::cerr << this->m_InputFibersFileName << ":" << std::endl;
@@ -232,11 +231,10 @@ fiberbundle1
 
 using namespace std;
 vector<float>
-fiberbundle1
+fiberbundle
 ::getTd()
 {
-    ofstream outfile("TD.txt", ios::trunc);
-    
+    vector<float> TD;
     for (const auto & curFiber : this->m_FiberBundle)
     {
         for (const auto & Field : curFiber.Fields)
@@ -244,36 +242,34 @@ fiberbundle1
             if (Field.first == "DDF") {
                 for (float i : Field.second)
                 {
-                    outfile << i << "\n";
+                    TD.emplace_back(i);
                 }
             }
         }
     }
-    outfile.close();
+
+    return TD;
 }
 
-vector<vector<float>>
-fiberbundle1
+map<int, vector<float>>
+fiberbundle
 ::getFiberTd()
 {
-    ofstream outfile("fiber_TD.txt", ios::trunc);
-    //outfile << this->m_InputFibersFileName << ":" << std::endl;
-    for (FiberVector::const_iterator it = this->m_FiberBundle.begin();
-        it != this->m_FiberBundle.end(); ++it)
+    map<int, vector<float>> ret;
+    int i = 0;
+    for (const auto & curFiber : this->m_FiberBundle)
     {
-        const fiber& curFiber = *it;
-        outfile << "Fiber " << it - this->m_FiberBundle.begin() << ":" << std::endl;
-        for (fiber::FieldMapType::const_iterator curFiberIt = curFiber.Fields.begin();
-            curFiberIt != curFiber.Fields.end(); ++curFiberIt)
+        for (const auto & Field : curFiber.Fields)
         {
-            if (curFiberIt->first == "DDF") {
-                for (unsigned int i = 0; i < curFiberIt->second.size(); ++i)
+            if (Field.first == "DDF") {
+                for (float j : Field.second)
                 {
-                    outfile << curFiberIt->second[i] << "  ";
+                    ret[i].emplace_back(j);
                 }
             }
         }
-        outfile << "\n";
+        ++i;
     }
-    outfile.close();
+
+    return ret;
 }

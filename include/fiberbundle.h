@@ -27,7 +27,7 @@ public:
     [[nodiscard]]
     std::vector<float> getTd();
     [[nodiscard]]
-    std::vector<std::vector<float>> getFiberTd();
+    std::map<int, std::vector<float>> getFiberTd();
 
 private:
     template<typename TArray>
