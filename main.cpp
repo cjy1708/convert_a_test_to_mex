@@ -28,26 +28,46 @@ public:
     void operator()(matlab::mex::ArgumentList outputs, matlab::mex::ArgumentList inputs) override {
         using namespace matlab::data;
         if (inputs.size() == 0 && outputs.size() == 2) {
+            // 保存输出参数
             TypedArray<float> output_1{ factory.createArray<float>({td.size(), 1}, td.begin().base(), td.end().base()) };
             outputs[0] = std::move(output_1);
             outputs[1] = getMexArray(std::move(this->fiberTd));
             return ;
         }
         checkInput(inputs);
-
-        CharArray input_filename = inputs[0];
-        auto inputFilename{ input_filename.toAscii() };
-        CharArray output_filename = inputs[1];
-        auto outputFilename{ output_filename.toAscii() };
+        if (outputs.size() != 2) {
+            // 在matlab上打印错误日志
+            matlabPtr->feval(u"error", 0, std::vector<Array>({ factory.createScalar(
+                    "Error: the number of output should be less to 2. \n"
+                    "rerun result this function with no input and two output. \n"
+                    ) }));
+        }
+        string inputFilename;
+        {
+            TypedArray<char16_t> input_filename = inputs[0];
+            u16string u16str{input_filename.begin(), input_filename.end()};
+            inputFilename = matlab::engine::convertUTF16StringToUTF8String(u16str);
+        }
+        cout << "inputFilename: " << inputFilename << endl;
+        string outputFilename;
+        {
+            TypedArray<char16_t> output_filename = inputs[1];
+            u16string u16str{output_filename.begin(), output_filename.end()};
+            outputFilename = matlab::engine::convertUTF16StringToUTF8String(u16str);
+        }
+        cout << "outputFilename: " << outputFilename << endl;
         uint scale = inputs[2][0];
+        cout << "scale: " << scale << endl;
         uint numberOfSamplingDirections = inputs[3][0];
+        cout << "numberOfSamplingDirections: " << numberOfSamplingDirections << endl;
         uint tractSubSampling = inputs[4][0];
+        cout << "tractSubSampling: " << tractSubSampling << endl;
         uint fiberPointSubSampling = inputs[5][0];
+        cout << "fiberPointSubSampling: " << fiberPointSubSampling << endl;
 
         fiberbundle myBundle;
         myBundle.ReadFibers(inputFilename);
-        computeDispersion(myBundle, scale, numberOfSamplingDirections, outputFilename, tractSubSampling,
-                          fiberPointSubSampling);
+        computeDispersion(myBundle, scale, numberOfSamplingDirections, outputFilename, tractSubSampling, fiberPointSubSampling);
         // 输出计算完成
 
         myBundle.WriteFibers(outputFilename, false, true);
@@ -56,12 +76,6 @@ public:
             // 保存输出参数
             this->td = myBundle.getTd();
             this->fiberTd = myBundle.getFiberTd();
-            // 在matlab上打印错误日志
-            matlab::data::CharArray error_message = factory.createCharArray(
-                "Error: the number of output should be less to 2. \n"
-                "rerun this function with no input and two output. \n");
-            matlabPtr->feval(u"error", 0,
-                std::vector<Array>({ error_message }));
         }
         // 输出参数第一个保存一个列向量
         auto output_1 = myBundle.getTd();
@@ -77,11 +91,11 @@ public:
         using namespace matlab::data;
         if (inputs.size() != 6) {
             // 在matlab上打印错误日志
-            matlab::data::CharArray error_message = factory.createCharArray(
-                "Use this function like this: \n"
-                "td, fiberTd = this_func(input_filename, output_filename, scale, numberOfSamplingDirections, tractSubSampling, fiberPointSubSampling) \n");
             matlabPtr->feval(u"error", 0,
-                std::vector<Array>({ error_message }));
+                std::vector<Array>({ factory.createScalar(
+                        "Use this function like this: \n"
+                        "td, fiberTd = this_func(input_filename, output_filename, scale, numberOfSamplingDirections, tractSubSampling, fiberPointSubSampling) \n"
+                ) }));
         }
     }
 
