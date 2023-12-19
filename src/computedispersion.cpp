@@ -58,8 +58,8 @@ namespace {
     typedef Eigen::Matrix<ukfPrecisionType, Eigen::Dynamic, 1> VectorType;
 
     /* 将矩阵的向量转换为单个矩阵。
-      MATLAB cell2mat更通用，我认为——这确实是 computedispersion所需要的。
-     光纤被存储为NRows、numPoints矩阵；输出必须是NRows、numPoints*numFibers
+     * MATLAB cell2mat更通用，我认为——这确实是 computedispersion所需要的。
+     * 光纤被存储为NRows、numPoints矩阵；输出必须是NRows、numPoints*numFibers
      */
     void cell2mat(const MatrixVector &fibers, MatrixType &tractMatrix) {
         const size_t fibersSize(fibers.size());
@@ -92,7 +92,7 @@ namespace {
     }
 
     /* Go from std::vector<std::vector<vec3_t> to std::vector<MatrixType>
-     输入光纤类型在光纤束中定义为点向量的向量。对于局部计算，我们需要一个矩阵向量，而不是维数* 3 的大小。
+     * 输入光纤类型在光纤束中定义为点向量的向量。对于局部计算，我们需要一个矩阵向量，而不是维数* 3 的大小。
      */
     void FiberVector2EigenFiberVector(const fiberbundle::FiberVector &fv /* in */, MatrixVector &lv) {
         const size_t fiberSize(fv.size());
@@ -113,16 +113,16 @@ namespace {
     }
 
     /* FRAME  Compute a frame field along a curve
-       FRAME沿曲线计算帧场
-        [T, N, B] = frame(X, Y, Z, V)
-      X、 Y和Z各自是 1 * M 的矢量。它们必须分别包含曲线点的x、y和z点坐标。M是沿着曲线的点数。
-        V是一个 3 * 1 的矢量。
-        T、 N和B是 3 * M 矩阵。
-     此函数分别返回输出向量T、N和B中沿曲线的切线、法线和二法线向量场。
-     注意，法线向量和二法线向量不一定是Frenet方程定义的向量。
-     由于Frenet框架在实践中是非常不稳定的——Frenet的二重向量场在曲线的拐点处是不连续的，
-     并且在直线段上消失——我们使用输入向量V来约束二重向量始终位于由切线向量和约束向量V定义的平面中。
-     这导致曲线上的二法线（以及因此的法线）矢量场的行为更加平滑。
+     * FRAME沿曲线计算帧场
+     * [T, N, B] = frame(X, Y, Z, V)
+     * X、 Y和Z各自是 1 * M 的矢量。它们必须分别包含曲线点的x、y和z点坐标。M是沿着曲线的点数。
+     * V是一个 3 * 1 的矢量。
+     * T、 N和B是 3 * M 矩阵。
+     * 此函数分别返回输出向量T、N和B中沿曲线的切线、法线和二法线向量场。
+     * 注意，法线向量和二法线向量不一定是Frenet方程定义的向量。
+     * 由于Frenet框架在实践中是非常不稳定的——Frenet的二重向量场在曲线的拐点处是不连续的，
+     * 并且在直线段上消失——我们使用输入向量V来约束二重向量始终位于由切线向量和约束向量V定义的平面中。
+     * 这导致曲线上的二法线（以及因此的法线）矢量场的行为更加平滑。
      */
     class Frame {
     public:
@@ -256,11 +256,11 @@ namespace {
 
         void compute();
 
-        const MatrixType &GetRotatedPointCoordinates() const {
+        [[nodiscard]] const MatrixType &GetRotatedPointCoordinates() const {
             return m_RotatedPointCoordinates;
         }
 
-        const MatrixType &GetRotatedTangentVectorField() const {
+        [[nodiscard]] const MatrixType &GetRotatedTangentVectorField() const {
             return m_RotatedTangentVectorField;
         }
 
@@ -463,129 +463,9 @@ int computeDispersion(fiberbundle &bundle, double scale,
         samplingDirections(1, j - 1) = cos(j * theta);
         samplingDirections(2, j - 1) = sin(j * theta);
     }
-    /*// 计算每个纤维点的DDF,沿着（可能是二次采样的）束的每个纤维进行第*次采样。
-    for (unsigned i = 0; i < unsigned(subSampledTractMatrix.cols()); i += fiberPointSubSampling)
-    *//*{
-        MatrixType rotationMatrix(3, 3);
-        rotationMatrix.row(0) = subSampledTractMatrix.block(3, i, 3, 1).transpose();
-        rotationMatrix.row(1) = subSampledTractMatrix.block(6, i, 3, 1).transpose();
-        rotationMatrix.row(2) = subSampledTractMatrix.block(9, i, 3, 1).transpose();
-        MatrixType currentPosition = subSampledTractMatrix.block(0, i, 3, 1);
-        RotateField rotateField(tractMatrix, rotationMatrix, currentPosition);
-        rotateField.compute();
-        const MatrixType& rotatedPointCoordinates = rotateField.GetRotatedPointCoordinates();
-        const MatrixType& rotatedTangentVectorField = rotateField.GetRotatedTangentVectorField();
-        MatrixType xCoordinates = rotatedPointCoordinates.row(0);
-        MatrixType yCoordinates = rotatedPointCoordinates.row(1);
-        MatrixType zCoordinates = rotatedPointCoordinates.row(2);
-        Eigen::Vector3d referenceMeanVector;
-        if (computeMeanVector(xCoordinates,
-            yCoordinates,
-            zCoordinates,
-            rotatedTangentVectorField,
-            currentPosition,
-            scale,
-            referenceMeanVector))
-        {
-            MatrixType samplingPosition(3, samplingDirections.cols());
-            for (unsigned j = 0; j < unsigned(samplingDirections.cols()); j++)
-            {
-                samplingPosition.col(j) = currentPosition + (scale * samplingDirections.col(j));
-            }
-            for (unsigned int j = 0; j < unsigned(samplingDirections.cols()); j++)
-            {
-                Eigen::Vector3d meanVector;
-                if (computeMeanVector(xCoordinates,
-                    yCoordinates,
-                    zCoordinates,
-                    rotatedTangentVectorField,
-                    samplingPosition.col(j),
-                    scale,
-                    meanVector))
-                {
-                    double dot = meanVector.dot(referenceMeanVector);
-                    double acosDot = acos(dot);
-                    if (acosDot < 0.0)
-                    {
-                        acosDot *= -1.0;
-                    }
-                    DistributionValues(j, i) = acosDot;
-                }
-            }
-            // 取计算平均值的中值
-            MatrixType pointDDF = DistributionValues.block(0, i, numberOfSamplingDirections, 1);
-            std::vector<double> nonNegDDF;
-            for (unsigned int j = 0; j < unsigned(pointDDF.rows()); ++j)
-            {
-                if (pointDDF(j, 0) != -1)
-                {
-                    nonNegDDF.push_back(pointDDF(j, 0));
-                }
-            }
-            if (!nonNegDDF.empty())
-            {
-                DistributionValues(numberOfSamplingDirections, i) = median(std::move(nonNegDDF));
-            }
-        }
-    }*/
+    // 计算每个纤维点的DDF,沿着（可能是二次采样的）束的每个纤维进行第*次采样。
 
     cout << "开始计算每个纤维点的DDF" << endl;
-    /*cout << "计算每个纤维点DDF的耗时为："
-         << measureTimeMillis([&]() {
-             std::vector<int> indices(subSampledTractMatrix.cols());
-             std::iota(indices.begin(), indices.end(), 0);
-
-             std::for_each(std::execution::par, indices.begin(), indices.end(), [&](int i) {
-                 if (i % fiberPointSubSampling != 0) {
-                     return;
-                 }
-
-                 MatrixType rotationMatrix(3, 3);
-                 rotationMatrix.row(0) = subSampledTractMatrix.block(3, i, 3, 1).transpose();
-                 rotationMatrix.row(1) = subSampledTractMatrix.block(6, i, 3, 1).transpose();
-                 rotationMatrix.row(2) = subSampledTractMatrix.block(9, i, 3, 1).transpose();
-                 MatrixType currentPosition = subSampledTractMatrix.block(0, i, 3, 1);
-                 RotateField rotateField(tractMatrix, rotationMatrix, currentPosition);
-                 rotateField.compute();
-                 const MatrixType &rotatedPointCoordinates = rotateField.GetRotatedPointCoordinates();
-                 const MatrixType &rotatedTangentVectorField = rotateField.GetRotatedTangentVectorField();
-                 MatrixType xCoordinates = rotatedPointCoordinates.row(0);
-                 MatrixType yCoordinates = rotatedPointCoordinates.row(1);
-                 MatrixType zCoordinates = rotatedPointCoordinates.row(2);
-                 Eigen::Vector3d referenceMeanVector;
-                 if (computeMeanVector(xCoordinates, yCoordinates, zCoordinates, rotatedTangentVectorField,
-                                       currentPosition,
-                                       scale,
-                                       referenceMeanVector)) {
-                     MatrixType samplingPosition(3, samplingDirections.cols());
-                     for (unsigned j = 0; j < unsigned(samplingDirections.cols()); j++) {
-                         samplingPosition.col(j) = currentPosition + (scale * samplingDirections.col(j));
-                     }
-                     for (unsigned int j = 0; j < unsigned(samplingDirections.cols()); j++) {
-                         Eigen::Vector3d meanVector;
-                         if (computeMeanVector(xCoordinates, yCoordinates, zCoordinates, rotatedTangentVectorField,
-                                               samplingPosition.col(j),
-                                               scale,
-                                               meanVector)) {
-                             double dot = meanVector.dot(referenceMeanVector);
-                             double acosDot = abs(acos(dot));
-                             DistributionValues(j, i) = acosDot;
-                         }
-                     }
-                     // 取计算平均值的中值
-                     MatrixType pointDDF = DistributionValues.block(0, i, numberOfSamplingDirections, 1);
-                     std::vector<double> nonNegDDF;
-                     for (unsigned int j = 0; j < unsigned(pointDDF.rows()); ++j) {
-                         if (pointDDF(j, 0) != -1) {
-                             nonNegDDF.push_back(pointDDF(j, 0));
-                         }
-                     }
-                     if (!nonNegDDF.empty()) {
-                         DistributionValues(numberOfSamplingDirections, i) = median(std::move(nonNegDDF));
-                     }
-                 }
-             });
-         }) << " ms" << endl;*/
     cout << "计算每个纤维点DDF的耗时："
          << measureTimeMillis([&]() {
              ThreadPool pool(thread::hardware_concurrency());
