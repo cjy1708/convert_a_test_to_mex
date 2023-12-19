@@ -3,7 +3,7 @@
 #include "fiberbundle.h"
 
 int
-computedispersion(fiberbundle& bundle,
+computeDispersion(fiberbundle& bundle,
     double scale,
     unsigned int numberOfSamplingDirections,
     const std::string& outputFilename,

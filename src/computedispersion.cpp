@@ -440,11 +440,12 @@ namespace {
     }
 }
 
-int computedispersion(fiberbundle& bundle, double scale,
-        unsigned int numberOfSamplingDirections,
-        const std::string& outputFilename,
-        unsigned int  tractSubSampling,
-        unsigned int fiberPointSubSampling)
+
+int computeDispersion(fiberbundle& bundle, double scale,
+    unsigned int numberOfSamplingDirections,
+    const std::string& outputFilename,
+    unsigned int  tractSubSampling,
+    unsigned int fiberPointSubSampling)
 {
     // bundle.Print();
     const double Pi = 3.14;
@@ -565,7 +566,7 @@ int computedispersion(fiberbundle& bundle, double scale,
                     nonNegDDF.push_back(pointDDF(j, 0));
                 }
             }
-            if (nonNegDDF.size() > 0)
+            if (!nonNegDDF.empty())
             {
                 DistributionValues(numberOfSamplingDirections, i) = median(nonNegDDF);
             }
@@ -598,12 +599,13 @@ int computedispersion(fiberbundle& bundle, double scale,
         curFiber.Fields["DDF"] = curDDF;
     }
 
-    if (outputFilename != "")
+    if (!outputFilename.empty())
     {
-        std::ofstream outfile(outputFilename.c_str());
+        std::ofstream outfile((outputFilename + ".mat").c_str());
         PrintMat(DDFOutput, outfile);
         outfile.close();
     }
+
     return 0; // success
 }
 

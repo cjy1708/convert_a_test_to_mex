@@ -46,7 +46,8 @@ public:
 
         fiberbundle myBundle;
         myBundle.ReadFibers(inputFilename);
-        computedispersion(myBundle, scale, numberOfSamplingDirections, outputFilename, tractSubSampling, fiberPointSubSampling);
+        computeDispersion(myBundle, scale, numberOfSamplingDirections, outputFilename, tractSubSampling,
+                          fiberPointSubSampling);
         // 输出计算完成
 
         myBundle.WriteFibers(outputFilename, false, true);
