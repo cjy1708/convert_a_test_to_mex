@@ -1,42 +1,24 @@
-#cmake_minimum_required(VERSION 3.26)
-#project(convert_a_test_to_mex)
-#
-#set(CMAKE_CXX_STANDARD 11)
-#
-#find_package(VTK REQUIRED)
-#find_package(ITK REQUIRED)
-#
-## 打印找到的VTK和ITK的位置
-#message(STATUS "VTK_DIR: ${VTK_DIR}")
-#message(STATUS "ITK_DIR: ${ITK_DIR}")
-#
-## matlab include dir
-#find_path(MATLAB_INCLUDE_DIR NAMES "mex.h" PATHS "/home/mi/Software/MATLAB/R2022b/extern/include")
-#
-#INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include /usr/local/include/eigen3 ${MATLAB_INCLUDE_DIR})
-#file(GLOB CPP_SOURCE src/*.cpp)
-#
-#add_executable(${PROJECT_NAME} main.cpp
-#        ${CPP_SOURCE}
-#)
-#target_link_libraries(convert_a_test_to_mex ${VTK_LIBRARIES} ${ITK_LIBRARIES})
-
-
 cmake_minimum_required(VERSION 3.26)
 project(a_test)
 
 set(CMAKE_CXX_STANDARD 17)
 
+if (MATLAB_ROOT_DIR)
+    set(MATLAB_ROOT_DIR ${MATLAB_ROOT_DIR} CACHE PATH "Matlab root directory")
+else()
+    # 查找/usr/local/MATLAB下的所有matlab版本
+    file(GLOB MATLAB_ROOT_DIR "/usr/local/MATLAB/R*")
+    # 选择最新的版本
+    list(SORT MATLAB_ROOT_DIR)
+    list(REVERSE MATLAB_ROOT_DIR)
+    list(GET MATLAB_ROOT_DIR 0 MATLAB_ROOT_DIR_TMP)
+    # 设置MATLAB_ROOT_DIR
+    set(MATLAB_ROOT_DIR ${MATLAB_ROOT_DIR_TMP} CACHE PATH "Matlab root directory")
+endif()
+
 find_package(VTK REQUIRED)
 find_package(ITK REQUIRED)
 find_package(Matlab REQUIRED)
-
-# 打印找到的VTK和ITK的位置
-message(STATUS "VTK_DIR: ${VTK_DIR}")
-message(STATUS "ITK_DIR: ${ITK_DIR}")
-
-# matlab include dir
-find_path(MATLAB_INCLUDE_DIR NAMES "mex.h" PATHS "/usr/local/MATLAB/R2022b/extern/include")
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include /usr/local/include/eigen3 ${MATLAB_INCLUDE_DIR})
 file(GLOB CPP_SOURCE src/*.cpp)
