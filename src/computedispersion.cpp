@@ -52,8 +52,8 @@ namespace {
     typedef Eigen::Matrix<ukfPrecisionType, Eigen::Dynamic, 1> VectorType;
 
     /* 将矩阵的向量转换为单个矩阵。
-      MATLAB cell2mat更通用，我认为——这确实是 computedispersion所需要的。
-     光纤被存储为NRows、numPoints矩阵；输出必须是NRows、numPoints*numFibers
+     * MATLAB cell2mat更通用，我认为——这确实是 computedispersion所需要的。
+     * 光纤被存储为NRows、numPoints矩阵；输出必须是NRows、numPoints*numFibers
      */
     void cell2mat(const MatrixVector& fibers, MatrixType& tractMatrix)
     {
@@ -487,7 +487,6 @@ int computeDispersion(fiberbundle& bundle, double scale,
     }
 
     cell2mat(lFibers, tractMatrix);
-
     //保留每根纤维束对纤维束进行二次采样
     MatrixVector subSampledTract;
     for (unsigned int i = 0; i < lFibers.size(); i += tractSubSampling)
@@ -501,7 +500,7 @@ int computeDispersion(fiberbundle& bundle, double scale,
     MatrixType DistributionValues = MatrixType::Ones(numberOfSamplingDirections + 1, subSampledTractMatrix.cols()) * -1;
     MatrixType samplingDirections = MatrixType::Zero(3, numberOfSamplingDirections);
     // 计算采样方向
-    double theta = (2.0 * Pi) / static_cast<double>(numberOfSamplingDirections);
+    double theta = (2.0 * M_PI) / static_cast<double>(numberOfSamplingDirections);
     for (unsigned int j = 1; j <= numberOfSamplingDirections; ++j)
     {
         samplingDirections(1, j - 1) = cos(j * theta);

@@ -44,16 +44,14 @@ public:
         }
         string inputFilename;
         {
-            TypedArray<char16_t> input_filename = inputs[0];
-            u16string u16str{input_filename.begin(), input_filename.end()};
-            inputFilename = matlab::engine::convertUTF16StringToUTF8String(u16str);
+            StringArray input_filename = inputs[0];
+            inputFilename = matlab::engine::convertUTF16StringToUTF8String(input_filename[0]);
         }
         cout << "inputFilename: " << inputFilename << endl;
         string outputFilename;
         {
-            TypedArray<char16_t> output_filename = inputs[1];
-            u16string u16str{output_filename.begin(), output_filename.end()};
-            outputFilename = matlab::engine::convertUTF16StringToUTF8String(u16str);
+            StringArray output_filename = inputs[1];
+            outputFilename = matlab::engine::convertUTF16StringToUTF8String(output_filename[0]);
         }
         cout << "outputFilename: " << outputFilename << endl;
         uint scale = inputs[2][0];
