@@ -34,6 +34,6 @@
 
 .idea
 
-data/output
+/data/output
 
 /cmake-build-debug
