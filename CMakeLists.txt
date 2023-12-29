@@ -19,11 +19,12 @@ endif()
 find_package(VTK REQUIRED)
 find_package(ITK REQUIRED)
 find_package(Matlab REQUIRED)
+find_package(Threads REQUIRED)
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include /usr/local/include/eigen3 ${MATLAB_INCLUDE_DIR})
 file(GLOB CPP_SOURCE src/*.cpp)
 
-matlab_add_mex(NAME ${PROJECT_NAME} SRC main.cpp ${CPP_SOURCE} LINK_TO ${VTK_LIBRARIES} ${ITK_LIBRARIES})
+matlab_add_mex(NAME ${PROJECT_NAME} SRC main.cpp ${CPP_SOURCE} LINK_TO ${VTK_LIBRARIES} ${ITK_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 # Set mex file extension according to platform
 if(WIN32)
