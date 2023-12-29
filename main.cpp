@@ -77,7 +77,7 @@ public:
         }
         // 输出参数第一个保存一个列向量
         auto output_1 = myBundle.getTd();
-        matlab::data::TypedArray<double> output_1_array = factory.createArray<float>(
+        matlab::data::TypedArray<float> output_1_array = factory.createArray<float>(
                 {output_1.size(), 1}, output_1.begin().base(), output_1.end().base());
         outputs[0] = std::move(output_1_array);
         outputs[1] = getMexArray(myBundle.getFiberTd());
