@@ -77,7 +77,7 @@ public:
         }
         // 输出参数第一个保存一个列向量
         auto output_1 = myBundle.getTd();
-        matlab::data::TypedArray<double> output_1_array = factory.createArray<float>(
+        matlab::data::TypedArray<float> output_1_array = factory.createArray<float>(
                 {output_1.size(), 1}, output_1.begin().base(), output_1.end().base());
         outputs[0] = std::move(output_1_array);
         outputs[1] = getMexArray(myBundle.getFiberTd());
@@ -107,9 +107,11 @@ public:
         }
         mx [0] ["keys"] = factory.createArray ( { 1,m.size () }, keys.begin (), keys.end ()); // 将键的vector转为matlab::data::Array对象，并赋值给mx [0] ["keys"]
         mx [0] ["values"] = factory.createCellArray ( { 1,m.size () });
+        matlab::data::TypedArray<matlab::data::Array> valuesArray = mx[0]["values"];
         for (size_t i{}; i < values.size(); ++i) {
-            mx[0]["values"][i] = std::move(values[i]);
-        }// 将值的vector转为matlab::data::CellArray对象，并赋值给mx [0] ["values"]
+            valuesArray[i] = std::move(values[i]);
+        }
+        mx[0]["values"] = std::move(valuesArray);
         return mx; // 返回一个matlab::data::Array对象
     }
 };
