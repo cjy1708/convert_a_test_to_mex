@@ -47,24 +47,24 @@ public:
             StringArray input_filename = inputs[0];
             inputFilename = matlab::engine::convertUTF16StringToUTF8String(input_filename[0]);
         }
-        cout << "inputFilename: " << inputFilename << endl;
         string outputFilename;
         {
             StringArray output_filename = inputs[1];
             outputFilename = matlab::engine::convertUTF16StringToUTF8String(output_filename[0]);
         }
-        cout << "outputFilename: " << outputFilename << endl;
         uint scale = inputs[2][0];
-        cout << "scale: " << scale << endl;
         uint numberOfSamplingDirections = inputs[3][0];
-        cout << "numberOfSamplingDirections: " << numberOfSamplingDirections << endl;
         uint tractSubSampling = inputs[4][0];
-        cout << "tractSubSampling: " << tractSubSampling << endl;
         uint fiberPointSubSampling = inputs[5][0];
-        cout << "fiberPointSubSampling: " << fiberPointSubSampling << endl;
 
         fiberbundle myBundle;
         myBundle.ReadFibers(inputFilename);
+        if (myBundle.GetFibers().empty()) {
+            // 在matlab上打印错误日志
+            matlabPtr->feval(u"error", 0, std::vector<Array>({ factory.createScalar(
+                    "Error: the input file is empty. file path is: " + inputFilename + "\n"
+            ) }));
+        }
         computeDispersion(myBundle, scale, numberOfSamplingDirections, outputFilename, tractSubSampling, fiberPointSubSampling);
         // 输出计算完成
 
