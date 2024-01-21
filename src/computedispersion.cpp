@@ -402,7 +402,6 @@ int computeDispersion(fiberbundle &bundle, double scale,
                       unsigned int tractSubSampling,
                       unsigned int fiberPointSubSampling) {
     // bundle.Print();
-    const double Pi = 3.14;
 
     fiberbundle::FiberVector &fibers = bundle.GetFibers();
 
