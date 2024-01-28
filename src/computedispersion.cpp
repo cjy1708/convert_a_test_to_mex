@@ -6,6 +6,8 @@
 #include <utility>
 #include <vector>
 #include <ThreadPool.h>
+#include <mutex>
+#include <condition_variable>
 
 /* This function requires three compulsory input arguments.此函数需要三个强制输入参数。
 
@@ -458,55 +460,58 @@ int computeDispersion(fiberbundle &bundle, double scale,
         samplingDirections(2, j - 1) = sin(j * theta);
     }
     // 计算每个纤维点的DDF,沿着（可能是二次采样的）束的每个纤维进行第*次采样。
-    ThreadPool pool(std::thread::hardware_concurrency());
-    for (unsigned i = 0; i < unsigned(subSampledTractMatrix.cols()); i += fiberPointSubSampling) {
-        pool.enqueue([&, i]() {
-            MatrixType rotationMatrix(3, 3);
-            rotationMatrix.row(0) = subSampledTractMatrix.block(3, i, 3, 1).transpose();
-            rotationMatrix.row(1) = subSampledTractMatrix.block(6, i, 3, 1).transpose();
-            rotationMatrix.row(2) = subSampledTractMatrix.block(9, i, 3, 1).transpose();
-            MatrixType currentPosition = subSampledTractMatrix.block(0, i, 3, 1);
-            RotateField rotateField(tractMatrix, rotationMatrix, currentPosition);
-            rotateField.compute();
-            const MatrixType &rotatedPointCoordinates = rotateField.GetRotatedPointCoordinates();
-            const MatrixType &rotatedTangentVectorField = rotateField.GetRotatedTangentVectorField();
-            MatrixType xCoordinates = rotatedPointCoordinates.row(0);
-            MatrixType yCoordinates = rotatedPointCoordinates.row(1);
-            MatrixType zCoordinates = rotatedPointCoordinates.row(2);
-            Eigen::Vector3d referenceMeanVector;
-            if (computeMeanVector(xCoordinates, yCoordinates, zCoordinates, rotatedTangentVectorField,
-                                  currentPosition,
-                                  scale,
-                                  referenceMeanVector)) {
-                MatrixType samplingPosition(3, samplingDirections.cols());
-                for (unsigned j = 0; j < unsigned(samplingDirections.cols()); j++) {
-                    samplingPosition.col(j) = currentPosition + (scale * samplingDirections.col(j));
-                }
-                for (unsigned int j = 0; j < unsigned(samplingDirections.cols()); j++) {
-                    Eigen::Vector3d meanVector;
-                    if (computeMeanVector(xCoordinates, yCoordinates, zCoordinates, rotatedTangentVectorField,
-                                          samplingPosition.col(j),
-                                          scale,
-                                          meanVector)) {
-                        double dot = meanVector.dot(referenceMeanVector);
-                        double acosDot = abs(acos(dot));
-                        DistributionValues(j, i) = acosDot;
+    {
+        ThreadPool pool(std::thread::hardware_concurrency());
+        for (unsigned i = 0; i < unsigned(subSampledTractMatrix.cols()); i += fiberPointSubSampling) {
+            pool.enqueue([&, i]() {
+                MatrixType rotationMatrix(3, 3);
+                rotationMatrix.row(0) = subSampledTractMatrix.block(3, i, 3, 1).transpose();
+                rotationMatrix.row(1) = subSampledTractMatrix.block(6, i, 3, 1).transpose();
+                rotationMatrix.row(2) = subSampledTractMatrix.block(9, i, 3, 1).transpose();
+                MatrixType currentPosition = subSampledTractMatrix.block(0, i, 3, 1);
+                RotateField rotateField(tractMatrix, rotationMatrix, currentPosition);
+                rotateField.compute();
+                const MatrixType &rotatedPointCoordinates = rotateField.GetRotatedPointCoordinates();
+                const MatrixType &rotatedTangentVectorField = rotateField.GetRotatedTangentVectorField();
+                MatrixType xCoordinates = rotatedPointCoordinates.row(0);
+                MatrixType yCoordinates = rotatedPointCoordinates.row(1);
+                MatrixType zCoordinates = rotatedPointCoordinates.row(2);
+                Eigen::Vector3d referenceMeanVector;
+                if (computeMeanVector(xCoordinates, yCoordinates, zCoordinates, rotatedTangentVectorField,
+                                      currentPosition,
+                                      scale,
+                                      referenceMeanVector)) {
+                    MatrixType samplingPosition(3, samplingDirections.cols());
+                    for (unsigned j = 0; j < unsigned(samplingDirections.cols()); j++) {
+                        samplingPosition.col(j) = currentPosition + (scale * samplingDirections.col(j));
+                    }
+                    for (unsigned int j = 0; j < unsigned(samplingDirections.cols()); j++) {
+                        Eigen::Vector3d meanVector;
+                        if (computeMeanVector(xCoordinates, yCoordinates, zCoordinates, rotatedTangentVectorField,
+                                              samplingPosition.col(j),
+                                              scale,
+                                              meanVector)) {
+                            double dot = meanVector.dot(referenceMeanVector);
+                            double acosDot = abs(acos(dot));
+                            DistributionValues(j, i) = acosDot;
+                        }
+                    }
+                    // 取计算平均值的中值
+                    MatrixType pointDDF = DistributionValues.block(0, i, numberOfSamplingDirections, 1);
+                    std::vector<double> nonNegDDF;
+                    for (unsigned int j = 0; j < unsigned(pointDDF.rows()); ++j) {
+                        if (pointDDF(j, 0) != -1) {
+                            nonNegDDF.push_back(pointDDF(j, 0));
+                        }
+                    }
+                    if (!nonNegDDF.empty()) {
+                        DistributionValues(numberOfSamplingDirections, i) = median(nonNegDDF);
                     }
                 }
-                // 取计算平均值的中值
-                MatrixType pointDDF = DistributionValues.block(0, i, numberOfSamplingDirections, 1);
-                std::vector<double> nonNegDDF;
-                for (unsigned int j = 0; j < unsigned(pointDDF.rows()); ++j) {
-                    if (pointDDF(j, 0) != -1) {
-                        nonNegDDF.push_back(pointDDF(j, 0));
-                    }
-                }
-                if (!nonNegDDF.empty()) {
-                    DistributionValues(numberOfSamplingDirections, i) = median(nonNegDDF);
-                }
-            }
-        });
+            });
+        }
     }
+    cout << "thread pool success!" << endl;
 
     MatrixType DDFOutput = DistributionValues.row(numberOfSamplingDirections);
     // 因此，处理子采样的“双关语”是跳过任何光纤
