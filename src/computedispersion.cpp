@@ -511,7 +511,7 @@ int computeDispersion(fiberbundle &bundle, double scale,
             });
         }
     }
-    cout << "thread pool success!" << endl;
+    cout << "heavy work thread pool done success!" << endl;
 
     MatrixType DDFOutput = DistributionValues.row(numberOfSamplingDirections);
     // 因此，处理子采样的“双关语”是跳过任何光纤

@@ -9,6 +9,7 @@
 #include <fiberbundle.h>
 #include <computedispersion.h>
 #include <filesystem>
+#include <measure_utils.h>
 
 using namespace std;
 
@@ -65,7 +66,6 @@ public:
             // 在matlab上打印错误日志
             matlabPtr->feval(u"error", 0, std::vector<Array>({ factory.createScalar(
                     "Error: the input file is not exist. \n"
-                    "rerun result this function with no input and two output. \n"
             ) }));
         }
         string outputFilename;
@@ -101,7 +101,9 @@ public:
 
         fiberbundle myBundle;
         myBundle.ReadFibers(inputFilename);
-        computeDispersion(myBundle, scale, numberOfSamplingDirections, outputFilename, tractSubSampling, fiberPointSubSampling);
+        cout << "main compute cost: " << magic_sheep::measureTimeMillis([&]() {
+            computeDispersion(myBundle, scale, numberOfSamplingDirections, outputFilename, tractSubSampling, fiberPointSubSampling);
+        }) << "ms\n";
         // 输出计算完成
 
         myBundle.WriteFibers(outputFilename, false, true);
@@ -110,6 +112,10 @@ public:
             // 保存输出参数
             this->td = myBundle.getTd();
             this->fiberTd = myBundle.getFiberTd();
+
+            matlabPtr->feval(u"error", 0, std::vector<Array>({ factory.createScalar(
+                    "Error: the number of output should be equal to 2. \n"
+            ) }));
         }
         // 输出参数第一个保存一个列向量
         auto output_1 = myBundle.getTd();
