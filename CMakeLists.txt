@@ -7,6 +7,8 @@ find_package(VTK REQUIRED)
 find_package(ITK REQUIRED)
 # 查找多线程库
 find_package(Threads REQUIRED)
+# 查找tbb
+find_package(TBB REQUIRED)
 
 # matlab include dir
 find_path(MATLAB_INCLUDE_DIR NAMES "mex.h" PATHS "/home/mi/Software/MATLAB/R2022b/extern/include")
@@ -18,4 +20,4 @@ file(GLOB CPP_SOURCE src/*.cpp)
 add_executable(${PROJECT_NAME} main.cpp
         ${CPP_SOURCE}
 )
-target_link_libraries(convert_a_test_to_mex ${VTK_LIBRARIES} ${ITK_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(convert_a_test_to_mex ${VTK_LIBRARIES} ${ITK_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} tbb)
