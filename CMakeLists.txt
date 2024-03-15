@@ -3,18 +3,40 @@ project(a_test)
 
 set(CMAKE_CXX_STANDARD 17)
 
-if (MATLAB_ROOT_DIR)
-    set(MATLAB_ROOT_DIR ${MATLAB_ROOT_DIR} CACHE PATH "Matlab root directory")
+if (EXISTS "$ENV{Matlab_ROOT_DIR}")
+    set(Matlab_ROOT_DIR "$ENV{Matlab_ROOT_DIR}")
+endif ()
+
+if (Matlab_ROOT_DIR)
+    message(STATUS "find environment Matlab_ROOT_DIR: ${Matlab_ROOT_DIR}")
+    # 判断路径是否存在，不存在则使用查找存在的matlab路径
+    if (NOT EXISTS ${Matlab_ROOT_DIR})
+        message(FATAL_ERROR "Matlab_ROOT_DIR: ${Matlab_ROOT_DIR} does not exist")
+        file(GLOB Matlab_ROOT_DIR "/usr/local/MATLAB/R*")
+        # 选择最新的版本
+        list(SORT Matlab_ROOT_DIR)
+        list(REVERSE Matlab_ROOT_DIR)
+        list(GET Matlab_ROOT_DIR 0 Matlab_ROOT_DIR_TMP)
+        # 设置Matlab_ROOT_DIR
+        set(Matlab_ROOT_DIR ${Matlab_ROOT_DIR_TMP} CACHE PATH "Matlab root directory")
+    endif ()
 else()
     # 查找/usr/local/MATLAB下的所有matlab版本
-    file(GLOB MATLAB_ROOT_DIR "/usr/local/MATLAB/R*")
+    file(GLOB Matlab_ROOT_DIR_LIST "/usr/local/MATLAB/R*")
+    # 如果Matlab_ROOT_DIR_LIST为空，则报错
+    list(LENGTH Matlab_ROOT_DIR_LIST Matlab_ROOT_DIR_LIST_LENGTH)
+    if(Matlab_ROOT_DIR_LIST_LENGTH EQUAL 0)
+        message(FATAL_ERROR "Matlab_ROOT_DIR_LIST is empty")
+    endif()
     # 选择最新的版本
-    list(SORT MATLAB_ROOT_DIR)
-    list(REVERSE MATLAB_ROOT_DIR)
-    list(GET MATLAB_ROOT_DIR 0 MATLAB_ROOT_DIR_TMP)
-    # 设置MATLAB_ROOT_DIR
-    set(MATLAB_ROOT_DIR ${MATLAB_ROOT_DIR_TMP} CACHE PATH "Matlab root directory")
+    list(SORT Matlab_ROOT_DIR_LIST)
+    list(REVERSE Matlab_ROOT_DIR_LIST)
+    list(GET Matlab_ROOT_DIR_LIST 0 Matlab_ROOT_DIR_TMP)
+    # 设置Matlab_ROOT_DIR
+    set(Matlab_ROOT_DIR ${Matlab_ROOT_DIR_TMP} CACHE PATH "Matlab root directory")
 endif()
+
+message(STATUS "MATLAB_ROOT_DIR: ${MATLAB_ROOT_DIR}")
 
 find_package(VTK REQUIRED)
 find_package(ITK REQUIRED)
