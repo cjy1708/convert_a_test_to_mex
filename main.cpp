@@ -90,7 +90,7 @@ public:
             filesystem::create_directories(parentPath);
         }
         cout << "outputFilename: " << outputFilename << endl;
-        uint scale = inputs[2][0];
+        double scale = inputs[2][0];
         cout << "scale: " << scale << endl;
         uint numberOfSamplingDirections = inputs[3][0];
         cout << "numberOfSamplingDirections: " << numberOfSamplingDirections << endl;
@@ -135,6 +135,7 @@ public:
                 std::vector<Array>({ factory.createScalar(
                         "Use this function like this: \n"
                         "td, fiberTd = this_func(input_filename, output_filename, scale, numberOfSamplingDirections, tractSubSampling, fiberPointSubSampling) \n"
+                        "example: this_func(\"xxx.vtk\", \"outxxx.vtk\", 3, int32(3), int32(1), int32(1))\n"
                 ) }));
         }
     }
