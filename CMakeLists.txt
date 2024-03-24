@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.26)
-project(a_test)
+project(a_test_mex)
 
 set(CMAKE_CXX_STANDARD 17)
 

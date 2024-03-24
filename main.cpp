@@ -103,7 +103,7 @@ public:
         myBundle.ReadFibers(inputFilename);
         cout << "main compute cost: " << magic_sheep::measureTimeMillis([&]() {
             computeDispersion(myBundle, scale, numberOfSamplingDirections, outputFilename, tractSubSampling, fiberPointSubSampling);
-        }) << "ms\n";
+        }) / 1000 << "s\n";
         // 输出计算完成
 
         myBundle.WriteFibers(outputFilename, false, true);
