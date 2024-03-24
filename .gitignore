@@ -36,3 +36,4 @@
 /data/output
 
 /cmake-build-debug
+/cmake-build-release
